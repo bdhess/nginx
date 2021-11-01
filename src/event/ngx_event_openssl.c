@@ -733,6 +733,12 @@ ngx_ssl_load_certificate_key(ngx_pool_t *pool, char **err,
             *err = "ENGINE_by_id() failed";
             return NULL;
         }
+        
+        if (!ENGINE_init(engine)) {
+            *err = "ENGINE_init() failed";
+            ENGINE_free(engine);
+            return NULL;
+        }
 
         *last++ = ':';
 
@@ -740,10 +746,12 @@ ngx_ssl_load_certificate_key(ngx_pool_t *pool, char **err,
 
         if (pkey == NULL) {
             *err = "ENGINE_load_private_key() failed";
+            ENGINE_finish(engine);
             ENGINE_free(engine);
             return NULL;
         }
 
+        ENGINE_finish(engine);
         ENGINE_free(engine);
 
         return pkey;
